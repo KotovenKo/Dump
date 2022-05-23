@@ -20,6 +20,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.ApiParam;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -82,19 +83,23 @@ public class AnswerResourceController {
         /*
          * Проверка наличия голоса на вопросе от авторизированного юзера в соответствии с тз сущности
          */
+//        Optional<VoteAnswer> voteAnswerOptional = voteAnswerService.getByUserIdAndAnswerId(user.getId(), answerId);
+//        if (voteAnswerOptional.isPresent()) {
+//            VoteAnswer oldVoteQuestion = voteAnswerOptional.get();
+//            if (oldVoteQuestion.getVote().equals(VoteType.UP_VOTE)) {
+//                voteAnswerService.delete(oldVoteQuestion);
+//                return ResponseEntity.ok().body(voteAnswerService.getTotalVotesByAnswerId(answerId));
+//            } else if (oldVoteQuestion.getVote().equals(VoteType.DOWN_VOTE)) {
+//                oldVoteQuestion.setVote(VoteType.UP_VOTE);
+//                voteAnswerService.update(oldVoteQuestion);
+//                return ResponseEntity.ok().body(voteAnswerService.getTotalVotesByAnswerId(answerId));
+//            }
+//        }
         Optional<VoteAnswer> voteAnswerOptional = voteAnswerService.getByUserIdAndAnswerId(user.getId(), answerId);
-        if (voteAnswerOptional.isPresent()) {
-            VoteAnswer oldVoteQuestion = voteAnswerOptional.get();
-            if (oldVoteQuestion.getVote().equals(VoteType.UP_VOTE)) {
-                voteAnswerService.delete(oldVoteQuestion);
-                return ResponseEntity.ok().body(voteAnswerService.getTotalVotesByAnswerId(answerId));
-            } else if (oldVoteQuestion.getVote().equals(VoteType.DOWN_VOTE)) {
-                oldVoteQuestion.setVote(VoteType.UP_VOTE);
-                voteAnswerService.update(oldVoteQuestion);
-                return ResponseEntity.ok().body(voteAnswerService.getTotalVotesByAnswerId(answerId));
-            }
+        if(voteAnswerOptional.isPresent()){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).
+                    body("You allready voted for the answer with id " + answerId);
         }
-
         if (optionalAnswer.isEmpty()) {
             return ResponseEntity.badRequest().body("Answer with id " + answerId + " not found");
         }
@@ -117,17 +122,23 @@ public class AnswerResourceController {
         /*
          * Проверка наличия голоса на вопросе от авторизированного юзера в соответствии с тз сущности
          */
+//        Optional<VoteAnswer> voteAnswerOptional = voteAnswerService.getByUserIdAndAnswerId(user.getId(), answerId);
+//        if (voteAnswerOptional.isPresent()) {
+//            VoteAnswer oldVoteQuestion = voteAnswerOptional.get();
+//            if (oldVoteQuestion.getVote().equals(VoteType.DOWN_VOTE)) {
+//                voteAnswerService.delete(oldVoteQuestion);
+//                return ResponseEntity.ok().body(voteAnswerService.getTotalVotesByAnswerId(answerId));
+//            } else if (oldVoteQuestion.getVote().equals(VoteType.UP_VOTE)) {
+//                oldVoteQuestion.setVote(VoteType.DOWN_VOTE);
+//                voteAnswerService.update(oldVoteQuestion);
+//                return ResponseEntity.ok().body(voteAnswerService.getTotalVotesByAnswerId(answerId));
+//            }
+//        }
+
         Optional<VoteAnswer> voteAnswerOptional = voteAnswerService.getByUserIdAndAnswerId(user.getId(), answerId);
-        if (voteAnswerOptional.isPresent()) {
-            VoteAnswer oldVoteQuestion = voteAnswerOptional.get();
-            if (oldVoteQuestion.getVote().equals(VoteType.DOWN_VOTE)) {
-                voteAnswerService.delete(oldVoteQuestion);
-                return ResponseEntity.ok().body(voteAnswerService.getTotalVotesByAnswerId(answerId));
-            } else if (oldVoteQuestion.getVote().equals(VoteType.UP_VOTE)) {
-                oldVoteQuestion.setVote(VoteType.DOWN_VOTE);
-                voteAnswerService.update(oldVoteQuestion);
-                return ResponseEntity.ok().body(voteAnswerService.getTotalVotesByAnswerId(answerId));
-            }
+        if(voteAnswerOptional.isPresent()){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).
+                    body("You allready voted for the answer with id " + answerId);
         }
 
         if (optionalAnswer.isEmpty()) {
