@@ -136,31 +136,41 @@ class TestAnswerResourceController extends AbstractApiTest {
                 .toString()
                 .contentEquals("116"));
 
-        //Проверяем, что невозможно проголосовать за свой ответ. Ответ с id 100 принадлежит пользователю с id 101("test2@test.ru","123")
-        Assertions.assertTrue(this.mvc.perform(MockMvcRequestBuilders.post("/api/user/question/100/answer/100/upVote")
-                        .header("Authorization", getJwtToken("test2@test.ru", "123")))
+        //Проверяем, что невозможно проголосовать за свой ответ. Ответ с id 103 принадлежит пользователю с id 100("3user@mail.ru", "3111")
+        Assertions.assertTrue(this.mvc.perform(MockMvcRequestBuilders.post("/api/user/question/103/answer/103/upVote")
+                        .header("Authorization", getJwtToken("3user@mail.ru", "3111")))
                 .andExpect(status().isBadRequest())
                 .andReturn()
                 .getResponse()
                 .getContentAsString()
-                .contains("Voting for your answer with id " + 100 + " not allowed"));
+                .contains("Voting for your answer with id " + 103 + " not allowed"));
 
-        //проверяем невозможность проголосовать дважды за один ответ, как за, так и против
+        //Проверяем невозможность проголосовать дважды за один ответ, как за, так и против
         Assertions.assertTrue(this.mvc.perform(MockMvcRequestBuilders.post("/api/user/question/100/answer/100/upVote")
                         .header("Authorization", getJwtToken("3user@mail.ru", "3111")))
                 .andExpect(status().isBadRequest())
                 .andReturn()
                 .getResponse()
                 .getContentAsString()
-                .contains("ConstraintViolationException"));
+                .contains("You allready voted for the answer with id " + 100));
 
-        Assertions.assertTrue(this.mvc.perform(MockMvcRequestBuilders.post("/api/user/question/100/answer/100/downVote")
+        Assertions.assertTrue(this.mvc.perform(MockMvcRequestBuilders.post("/api/user/question/100/answer/100/upVote")
                         .header("Authorization", getJwtToken("3user@mail.ru", "3111")))
                 .andExpect(status().isBadRequest())
                 .andReturn()
                 .getResponse()
                 .getContentAsString()
-                .contains("ConstraintViolationException"));
+                .contains("You allready voted for the answer with id " + 100));
+
+        //Проверяем, что невозможно проголосовать за ответ, которого нет
+        Assertions.assertTrue((this.mvc.perform(MockMvcRequestBuilders.post("/api/user/question/100/answer/104/upVote")
+                .header("Authorization", getJwtToken("3user@mail.ru", "3111")))
+                .andExpect(status().isBadRequest())
+                .andReturn()
+                .getResponse()
+                .getContentAsString()
+                .contains("Answer with id " + 104 + " not found")));
+
     }
 
     @Test
@@ -174,6 +184,7 @@ class TestAnswerResourceController extends AbstractApiTest {
             "datasets/AnswerResourceController/setDownVoteAnswerByAnswerId/user.yml",
             "datasets/AnswerResourceController/setDownVoteAnswerByAnswerId/voteAnswer.yml"
     })
+
     public void setDownVoteAnswerByAnswerId() throws Exception {
         //Проверяем возвращаемое значение. В датасетах в базе данных уже было 2 голоса ЗА ответ с id 100
         this.mvc.perform(MockMvcRequestBuilders.post("/api/user/question/100/answer/100/downVote")
@@ -196,14 +207,14 @@ class TestAnswerResourceController extends AbstractApiTest {
                 .toString()
                 .contentEquals("101"));
 
-        //Проверяем, что невозможно проголосовать за свой ответ. Ответ с id 100 принадлежит пользователю с id 101("test2@test.ru","123")
-        Assertions.assertTrue(this.mvc.perform(MockMvcRequestBuilders.post("/api/user/question/100/answer/100/downVote")
-                        .header("Authorization", getJwtToken("test2@test.ru", "123")))
+        //Проверяем, что невозможно проголосовать за свой ответ. Ответ с id 103 принадлежит пользователю с id 101("3user@mail.ru", "3111")
+        Assertions.assertTrue(this.mvc.perform(MockMvcRequestBuilders.post("/api/user/question/103/answer/103/downVote")
+                        .header("Authorization", getJwtToken("3user@mail.ru", "3111")))
                 .andExpect(status().isBadRequest())
                 .andReturn()
                 .getResponse()
                 .getContentAsString()
-                .contains("Voting for your answer with id " + 100 + " not allowed"));
+                .contains("Voting for your answer with id " + 103 + " not allowed"));
 
         //проверяем невозможность проголосовать дважды за один ответ, как за, так и против
         Assertions.assertTrue(this.mvc.perform(MockMvcRequestBuilders.post("/api/user/question/100/answer/100/upVote")
@@ -212,7 +223,7 @@ class TestAnswerResourceController extends AbstractApiTest {
                 .andReturn()
                 .getResponse()
                 .getContentAsString()
-                .contains("ConstraintViolationException"));
+                .contains("You allready voted for the answer with id " + 100));
 
         Assertions.assertTrue(this.mvc.perform(MockMvcRequestBuilders.post("/api/user/question/100/answer/100/downVote")
                         .header("Authorization", getJwtToken("3user@mail.ru", "3111")))
@@ -220,7 +231,16 @@ class TestAnswerResourceController extends AbstractApiTest {
                 .andReturn()
                 .getResponse()
                 .getContentAsString()
-                .contains("ConstraintViolationException"));
+                .contains("You allready voted for the answer with id " + 100));
+
+        //Проверяем, что невозможно проголосовать за ответ, которого нет
+        Assertions.assertTrue((this.mvc.perform(MockMvcRequestBuilders.post("/api/user/question/100/answer/104/upVote")
+                        .header("Authorization", getJwtToken("3user@mail.ru", "3111")))
+                .andExpect(status().isBadRequest())
+                .andReturn()
+                .getResponse()
+                .getContentAsString()
+                .contains("Answer with id " + 104 + " not found")));
     }
 
     @Test

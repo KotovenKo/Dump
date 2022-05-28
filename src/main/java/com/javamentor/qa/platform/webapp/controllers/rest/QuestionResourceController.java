@@ -31,10 +31,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -112,37 +109,31 @@ public class QuestionResourceController {
     @PostMapping("{questionId}/upVote")
     @ApiOperation(value = "Голосование за Question по Question id", tags = {"VoteQuestion up"})
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "Голосование успешно произведено"),
-            @ApiResponse(code = 400, message = "Вопрос с таким ID не найден или Вы уже голосовали за данный Question")
+            @ApiResponse(code = 200, message = "Успешное голосование"),
+            @ApiResponse(code = 400, message = "Вопрос с таким ID не найден или Вы уже голосовали за данный вопрос")
     })
-    public ResponseEntity<Integer> upVote(@PathVariable Long questionId) {
+    public ResponseEntity<?> upVote(@PathVariable Long questionId) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getDetails();
         Optional<Question> optionalQuestion = questionService.getById(questionId);
         /*
-        * Проверка наличия голоса на вопросе от авторизированного юзера в соответствии с тз сущности
-        */
+         * Проверка наличия голоса на вопросе от авторизированного юзера в соответствии с тз сущности
+         */
         Optional<VoteQuestion> voteQuestionOptional = voteQuestionService.getByUserIdAndQuestionId(user.getId(), questionId);
         if (voteQuestionOptional.isPresent()) {
-            VoteQuestion oldVoteQuestion = voteQuestionOptional.get();
-            if (oldVoteQuestion.getVote().equals(VoteType.UP_VOTE)) {
-                voteQuestionService.delete(oldVoteQuestion);
-                return ResponseEntity.ok().body(voteQuestionService.getTotalVoteQuestionsByQuestionId(questionId));
-            } else if (oldVoteQuestion.getVote().equals(VoteType.DOWN_VOTE)) {
-                oldVoteQuestion.setVote(VoteType.UP_VOTE);
-                voteQuestionService.update(oldVoteQuestion);
-                return ResponseEntity.ok().body(voteQuestionService.getTotalVoteQuestionsByQuestionId(questionId));
-            }
+            return ResponseEntity.badRequest().body("You allready voted for the question with id " + questionId);
         }
 
-        if (optionalQuestion.isPresent()) {
-            Question question = optionalQuestion.get();
-            if (voteQuestionService.userVoteCheck(questionId, user.getId())) {
-                VoteQuestion voteQuestion = new VoteQuestion(user, question, LocalDateTime.now(), VoteType.UP_VOTE);
-                voteQuestionService.persist(voteQuestion);
-                return ResponseEntity.ok().body(voteQuestionService.getTotalVoteQuestionsByQuestionId(questionId));
-            }
+        if (optionalQuestion.isEmpty()) {
+            return ResponseEntity.badRequest().body("Question with id " + questionId + " not found");
         }
-        return ResponseEntity.badRequest().build();
+        Question question = optionalQuestion.get();
+        if (!(question.getUser().getId()).equals(user.getId())) {
+            VoteQuestion voteQuestion = new VoteQuestion(user, question, LocalDateTime.now(), VoteType.UP_VOTE);
+            voteQuestionService.persist(voteQuestion);
+            return ResponseEntity.ok().body(voteQuestionService.getTotalVoteQuestionsByQuestionId(questionId));
+        }
+        return ResponseEntity.badRequest().body("Voting for your question with id " + questionId + " not allowed");
+
     }
 
     @PostMapping("/{questionId}/view")
@@ -171,10 +162,10 @@ public class QuestionResourceController {
     @PostMapping("/{questionId}/downVote")
     @ApiOperation(value = "Голосование за Question по Question id", tags = {"VoteQuestion down"})
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "Голосование успешно произведено"),
-            @ApiResponse(code = 400, message = "Вопрос с таким ID не найден или Вы уже голосовали за данный Question")
+            @ApiResponse(code = 200, message = "Успешное голосование"),
+            @ApiResponse(code = 400, message = "Вопрос с таким ID не найден или Вы уже голосовали за данный вопрос  ")
     })
-    public ResponseEntity<Integer> downVote(@PathVariable Long questionId) {
+    public ResponseEntity<?> downVote(@PathVariable Long questionId) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getDetails();
         Optional<Question> optionalQuestion = questionService.getById(questionId);
 
@@ -183,26 +174,19 @@ public class QuestionResourceController {
          */
         Optional<VoteQuestion> voteQuestionOptional = voteQuestionService.getByUserIdAndQuestionId(user.getId(), questionId);
         if (voteQuestionOptional.isPresent()) {
-            VoteQuestion oldVoteQuestion = voteQuestionOptional.get();
-            if (oldVoteQuestion.getVote().equals(VoteType.DOWN_VOTE)) {
-                voteQuestionService.delete(oldVoteQuestion);
-                return ResponseEntity.ok().body(voteQuestionService.getTotalVoteQuestionsByQuestionId(questionId));
-            } else if (oldVoteQuestion.getVote().equals(VoteType.UP_VOTE)) {
-                oldVoteQuestion.setVote(VoteType.DOWN_VOTE);
-                voteQuestionService.update(oldVoteQuestion);
-                return ResponseEntity.ok().body(voteQuestionService.getTotalVoteQuestionsByQuestionId(questionId));
-            }
+            return ResponseEntity.badRequest().body("You allready voted for the question with id " + questionId);
         }
 
-        if (optionalQuestion.isPresent()) {
+        if (optionalQuestion.isEmpty()) {
+            return ResponseEntity.badRequest().body("Question with id " + questionId + " not found");
+        }
             Question question = optionalQuestion.get();
-            if (voteQuestionService.userVoteCheck(questionId, user.getId())) {
+            if (!(question.getUser().getId()).equals(user.getId())) {
                 VoteQuestion voteQuestion = new VoteQuestion(user, question, LocalDateTime.now(), VoteType.DOWN_VOTE);
                 voteQuestionService.persist(voteQuestion);
                 return ResponseEntity.ok().body(voteQuestionService.getTotalVoteQuestionsByQuestionId(questionId));
             }
-        }
-        return ResponseEntity.badRequest().build();
+        return ResponseEntity.badRequest().body("Voting for your question with id " + questionId + " not allowed");
     }
 
     @GetMapping

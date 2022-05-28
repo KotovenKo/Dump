@@ -21,7 +21,7 @@ user_entity:
   - id: 102
     email: "test3@test.ru"
     password: "123"
-    role_id: 100
+    role_id: 101
     last_redaction_date: "[DAY,NOW]"
     image_link: "image102"
     nickname: "user102"

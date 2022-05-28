@@ -74,7 +74,7 @@ public class AnswerResourceController {
     @ApiOperation(value = "Голосование за ответ", tags = {"Получение общего количества голосов"})
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Успешное голосование"),
-            @ApiResponse(code = 400, message = "Ошибка голосования")})
+            @ApiResponse(code = 400, message = "Ответ с таким ID не найден или Вы уже голосовали за этот ответ")})
     @PostMapping("/{id}/upVote")
     public ResponseEntity<?> setUpVoteAnswerByAnswerId(@PathVariable("id") Long answerId) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getDetails();
@@ -83,18 +83,6 @@ public class AnswerResourceController {
         /*
          * Проверка наличия голоса на вопросе от авторизированного юзера в соответствии с тз сущности
          */
-//        Optional<VoteAnswer> voteAnswerOptional = voteAnswerService.getByUserIdAndAnswerId(user.getId(), answerId);
-//        if (voteAnswerOptional.isPresent()) {
-//            VoteAnswer oldVoteQuestion = voteAnswerOptional.get();
-//            if (oldVoteQuestion.getVote().equals(VoteType.UP_VOTE)) {
-//                voteAnswerService.delete(oldVoteQuestion);
-//                return ResponseEntity.ok().body(voteAnswerService.getTotalVotesByAnswerId(answerId));
-//            } else if (oldVoteQuestion.getVote().equals(VoteType.DOWN_VOTE)) {
-//                oldVoteQuestion.setVote(VoteType.UP_VOTE);
-//                voteAnswerService.update(oldVoteQuestion);
-//                return ResponseEntity.ok().body(voteAnswerService.getTotalVotesByAnswerId(answerId));
-//            }
-//        }
         Optional<VoteAnswer> voteAnswerOptional = voteAnswerService.getByUserIdAndAnswerId(user.getId(), answerId);
         if(voteAnswerOptional.isPresent()){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).
@@ -113,7 +101,7 @@ public class AnswerResourceController {
     @ApiOperation(value = "Голосование против ответа", tags = {"Получение общего количества голосов"})
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Успешное голосование"),
-            @ApiResponse(code = 400, message = "Ошибка голосования")})
+            @ApiResponse(code = 400, message = "Ответ с таким ID не найден или Вы уже голосовали за этот ответ")})
     @PostMapping("/{id}/downVote")
     public ResponseEntity<?> setDownVoteAnswerByAnswerId(@PathVariable("id") Long answerId) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getDetails();
@@ -122,19 +110,6 @@ public class AnswerResourceController {
         /*
          * Проверка наличия голоса на вопросе от авторизированного юзера в соответствии с тз сущности
          */
-//        Optional<VoteAnswer> voteAnswerOptional = voteAnswerService.getByUserIdAndAnswerId(user.getId(), answerId);
-//        if (voteAnswerOptional.isPresent()) {
-//            VoteAnswer oldVoteQuestion = voteAnswerOptional.get();
-//            if (oldVoteQuestion.getVote().equals(VoteType.DOWN_VOTE)) {
-//                voteAnswerService.delete(oldVoteQuestion);
-//                return ResponseEntity.ok().body(voteAnswerService.getTotalVotesByAnswerId(answerId));
-//            } else if (oldVoteQuestion.getVote().equals(VoteType.UP_VOTE)) {
-//                oldVoteQuestion.setVote(VoteType.DOWN_VOTE);
-//                voteAnswerService.update(oldVoteQuestion);
-//                return ResponseEntity.ok().body(voteAnswerService.getTotalVotesByAnswerId(answerId));
-//            }
-//        }
-
         Optional<VoteAnswer> voteAnswerOptional = voteAnswerService.getByUserIdAndAnswerId(user.getId(), answerId);
         if(voteAnswerOptional.isPresent()){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).
