@@ -8,18 +8,16 @@ import com.javamentor.qa.platform.models.entity.question.TrackedTag;
 import com.javamentor.qa.platform.models.entity.question.answer.Answer;
 import com.javamentor.qa.platform.models.entity.user.Role;
 import com.javamentor.qa.platform.models.entity.user.User;
-import com.javamentor.qa.platform.service.abstracts.model.AnswerService;
-import com.javamentor.qa.platform.service.abstracts.model.IgnoredTagService;
-import com.javamentor.qa.platform.service.abstracts.model.QuestionService;
-import com.javamentor.qa.platform.service.abstracts.model.RoleService;
-import com.javamentor.qa.platform.service.abstracts.model.TagService;
-import com.javamentor.qa.platform.service.abstracts.model.TrackedTagService;
-import com.javamentor.qa.platform.service.abstracts.model.UserService;
-import com.javamentor.qa.platform.service.abstracts.model.BookmarkService;
+import com.javamentor.qa.platform.models.entity.user.reputation.Reputation;
+import com.javamentor.qa.platform.models.entity.user.reputation.ReputationType;
+import com.javamentor.qa.platform.service.abstracts.model.*;
 import org.flywaydb.core.Flyway;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -27,6 +25,7 @@ import java.util.Random;
 public class TestDataInitService {
     private final RoleService roleService;
     private final UserService userService;
+    private final ReputationService reputationService;
     private final Flyway flyway;
     private final AnswerService answerService;
     private final QuestionService questionService;
@@ -36,12 +35,13 @@ public class TestDataInitService {
     private final IgnoredTagService ignoredTagService;
 
     @Autowired
-    public TestDataInitService(RoleService roleService, UserService userService, Flyway flyway,
+    public TestDataInitService(RoleService roleService, UserService userService, ReputationService reputationService, Flyway flyway,
                                AnswerService answerService, QuestionService questionService,
                                TagService tagService, TrackedTagService trackedTagService,
                                IgnoredTagService ignoredTagService, BookmarkService bookmarkService) {
         this.roleService = roleService;
         this.userService = userService;
+        this.reputationService = reputationService;
         this.flyway = flyway;
         this.answerService = answerService;
         this.questionService = questionService;
@@ -59,6 +59,7 @@ public class TestDataInitService {
         addAnswer();
         addTrackedAndIgnoredTag();
         addBookmark();
+        addReputation();
     }
 
     private void addRole() {
@@ -124,6 +125,14 @@ public class TestDataInitService {
             answer.setIsDeletedByModerator(random.nextBoolean());
             answer.setQuestion(questionService.getById((long) (1 + (int) (Math.random() * 49))).get());
             answer.setUser(userService.getById((long) (1 + (int) (Math.random() * 49))).get());
+            //добавдение модератора к рамдомной части ответов
+            for (int y = 1 + (int) (Math.random() * 49); y <= x; y = y + 2) {
+                if (y == x) {
+                    answer.setEditModerator(userService.getAll().stream()
+                            .filter(user -> user.getRole().getName().equals("ADMIN")).findAny().get());
+                    break;
+                }
+            }
             answerService.persist(answer);
         }
     }
@@ -202,7 +211,26 @@ public class TestDataInitService {
         }
     }
 
-    private void addBookmark(){
+    //Инициализация Репутации
+    public void addReputation() {
+
+        for (int i = 2; i <= 50; i++) {
+            Reputation reputation = new Reputation();
+            reputation.setPersistDate(LocalDateTime.now());
+            reputation.setAuthor(userService.getById((long) (1 + (int) (Math.random() * 49))).get());
+            reputation.setSender(userService.getById((long) (1 + (int) (Math.random() * 49))).get());
+            reputation.setCount((int) (Math.random() * 40));
+            reputation.setType(ReputationType.Answer);
+//            reputation.setType((ReputationType) Arrays.asList(ReputationType.values()).get(i));
+            reputation.setQuestion(questionService.getById((long) (1 + (int) (Math.random() * 49))).get());
+
+//           reputation.setAnswer(answerService.getById((long) (1 + (int) (Math.random() * 49))).get().);
+
+
+        }
+    }
+
+    private void addBookmark() {
         List<BookMarks> bookmarks = new ArrayList<>();
 
         for (int x = 2; x <= 50; x++) {
@@ -214,7 +242,7 @@ public class TestDataInitService {
                 BookMarks bookmark = new BookMarks();
                 Question question = questionService.getById((long) (1 + (int) (Math.random() * 49))).get();
 
-                if(!bookmarks.contains(question) && bookmarkService.bookmarkByUserId(user.getId()).size() < countbookmarks){
+                if (!bookmarks.contains(question) && bookmarkService.bookmarkByUserId(user.getId()).size() < countbookmarks) {
                     bookmarks.add(bookmark);
                     bookmark.setQuestion(question);
                     bookmark.setUser(user);
